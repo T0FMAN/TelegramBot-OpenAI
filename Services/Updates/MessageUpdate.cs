@@ -16,7 +16,7 @@ namespace TelegramBot_OpenAI.Services
 
             var action = messageText.Split(' ')[0] switch
             {
-                "/photoGPT" => GeneratePhotoChatGPT(_botClient, message, cancellationToken),
+                //"/photoGPT" => GeneratePhotoChatGPT(_botClient, message, cancellationToken),
                 "/inline_keyboard" => SendInlineKeyboard(_botClient, message, cancellationToken),
                 "/keyboard" => SendReplyKeyboard(_botClient, message, cancellationToken),
                 "/remove" => RemoveKeyboard(_botClient, message, cancellationToken),
@@ -27,13 +27,6 @@ namespace TelegramBot_OpenAI.Services
             };
             Message sentMessage = await action;
             _logger.LogInformation("The message was sent with id: {SentMessageId}", sentMessage.MessageId);
-
-            static async Task<Message> GeneratePhotoChatGPT(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
-            {
-                await botClient.SendChatActionAsync(message.Chat.Id, ChatAction.RecordVoice);
-                await Task.Delay(5000);
-                return await botClient.SendTextMessageAsync(message.Chat.Id, "ChatGPT 3.5");
-            }
 
             static async Task<Message> SendInlineKeyboard(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
             {

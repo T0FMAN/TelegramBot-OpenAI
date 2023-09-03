@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33829.357
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TelegramBot-OpenAI", "TelegramBot-OpenAI.csproj", "{B279B4B9-C07D-46DC-B7CD-4CF98D06A106}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TelegramBot_OpenAI", "TelegramBot_OpenAI.csproj", "{B279B4B9-C07D-46DC-B7CD-4CF98D06A106}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

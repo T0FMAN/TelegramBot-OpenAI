@@ -2,6 +2,12 @@ using Telegram.Bot;
 using TelegramBot_OpenAI.Controllers;
 using TelegramBot_OpenAI.Services;
 using TelegramBot_OpenAI.Configurations;
+using TelegramBot_OpenAI.Extensions;
+using TelegramBot_OpenAI.Data.Enums;
+
+var path = Environment.CurrentDirectory + "\\secrets.json";
+var set = await path.SetEnvVariablesFromFile(FileType.JSON);
+if (!set) return;
 
 var builder = WebApplication.CreateBuilder(args);
 
