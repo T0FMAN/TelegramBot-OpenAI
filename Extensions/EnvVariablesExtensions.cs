@@ -6,10 +6,16 @@ namespace TelegramBot_OpenAI.Extensions
 {
     public static class EnvVariablesExtensions
     {
+        private static void SetEnvConnectionString(string connectionString)
+        {
+            Environment.SetEnvironmentVariable("ConnectionString", connectionString);
+        }
+
         private static void SetEnvOpenAiToken(string token)
         {
             Environment.SetEnvironmentVariable("OpenAiToken", token);
         }
+
         private static void SetEnvBotSettings(BotConfiguration configuration)
         {
             Environment.SetEnvironmentVariable("BotToken", configuration.BotToken);
@@ -30,6 +36,7 @@ namespace TelegramBot_OpenAI.Extensions
                     {
                         var secrets = ReadSecretsFromJSON(data);
 
+                        SetEnvConnectionString(secrets.ConnectionString);
                         SetEnvOpenAiToken(secrets.OpenAiToken);
                         SetEnvBotSettings(secrets.BotConfiguration);
                     }
