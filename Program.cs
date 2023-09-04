@@ -11,7 +11,7 @@ using TelegramBot_OpenAI.Repository;
 
 var path = Environment.CurrentDirectory + "\\secrets.json";
 var set = await path.SetEnvVariablesFromFile(FileType.JSON);
-if (!set) return;
+if (!set) throw new Exception("Env variables not setted..");
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,12 +19,7 @@ var botConfigurationSection = builder.Configuration.GetSection(BotConfiguration.
 
 builder.Services.Configure<BotConfiguration>(botConfigurationSection);
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    //var connectionString = Environment.GetEnvironmentVariable("ConnectionString") ?? throw new Exception("Variable 'ConnectionString' is not set in env.");
-    //options.UseSqlServer(builder.Configuration.GetConnectionString("MsSql"));
-    //options.UseSqlServer();
-});
+builder.Services.AddDbContext<AppDbContext>(options => {});
 
 var botConfiguration = botConfigurationSection.Get<BotConfiguration>();
 
