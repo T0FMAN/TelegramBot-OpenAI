@@ -1,11 +1,23 @@
-﻿namespace TelegramBot_OpenAI.Models
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using TelegramBot_OpenAI.Data.Enums;
+
+namespace TelegramBot_OpenAI.Models
 {
     public class TelegramUser
     {
-        public TelegramUser() { }
-
-        public int Id { get; set; }
-        public string TelegramId { get; set; }
-        public string UserName { get; set; }
+        [Key]
+        public int IdUser { get; init; }
+        public long TelegramId { get; init; }
+        public string? UserName { get; set; }
+        public string? Bio { get; set; }
+        public bool IsReg { get; set; } = false;
+        public DateTime? RegestrationDate { get; set; }
+        public DateTime? LastActionDate { get; set; }
+        public UserAction UserAction { get; set; } = UserAction.None;
+        [ForeignKey(nameof(InvitedUser))]
+        public int? IdInvited { get; set; } // ID user, who invited (not TelegramId)
+        public TelegramUser? InvitedUser { get; set; }
+        public int? CountReferals { get; set; } = 0;
     }
 }

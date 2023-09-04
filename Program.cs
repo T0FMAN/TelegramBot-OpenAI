@@ -4,6 +4,10 @@ using TelegramBot_OpenAI.Services;
 using TelegramBot_OpenAI.Configurations;
 using TelegramBot_OpenAI.Extensions;
 using TelegramBot_OpenAI.Data.Enums;
+using TelegramBot_OpenAI.Data.DB;
+using Microsoft.EntityFrameworkCore;
+using TelegramBot_OpenAI.Interfaces;
+using TelegramBot_OpenAI.Repository;
 
 var path = Environment.CurrentDirectory + "\\secrets.json";
 var set = await path.SetEnvVariablesFromFile(FileType.JSON);
@@ -12,7 +16,15 @@ if (!set) return;
 var builder = WebApplication.CreateBuilder(args);
 
 var botConfigurationSection = builder.Configuration.GetSection(BotConfiguration.Configuration);
+
 builder.Services.Configure<BotConfiguration>(botConfigurationSection);
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    //var connectionString = Environment.GetEnvironmentVariable("ConnectionString") ?? throw new Exception("Variable 'ConnectionString' is not set in env.");
+    //options.UseSqlServer(builder.Configuration.GetConnectionString("MsSql"));
+    //options.UseSqlServer();
+});
 
 var botConfiguration = botConfigurationSection.Get<BotConfiguration>();
 

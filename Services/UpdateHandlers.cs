@@ -4,17 +4,20 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
+using TelegramBot_OpenAI.Interfaces;
 
 namespace TelegramBot_OpenAI.Services
 {
     public partial class UpdateHandlers
     {
         private readonly ITelegramBotClient _botClient;
+        private readonly IUserRepository _userRepository;
         private readonly ILogger<UpdateHandlers> _logger;
 
-        public UpdateHandlers(ITelegramBotClient botClient, ILogger<UpdateHandlers> logger)
+        public UpdateHandlers(ITelegramBotClient botClient, IUserRepository userRepository, ILogger<UpdateHandlers> logger)
         {
             _botClient = botClient;
+            _userRepository = userRepository;
             _logger = logger;
         }
 
