@@ -15,6 +15,7 @@ if (!set) throw new Exception("Env variables not setted..");
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddJsonFile(path);
 var botConfigurationSection = builder.Configuration.GetSection(BotConfiguration.Configuration);
 
 builder.Services.Configure<BotConfiguration>(botConfigurationSection);
@@ -28,6 +29,7 @@ builder.Services.AddHttpClient("telegram_bot_client")
                 {
                     BotConfiguration? botConfig = sp.GetConfiguration<BotConfiguration>();
                     TelegramBotClientOptions options = new(botConfig.BotToken);
+                    //TelegramBotClientOptions options = new(EnvVariablesExtensions.GetEnvBotSettings("BotToken"));
                     return new TelegramBotClient(options, httpClient);
                 });
 builder.Services.AddScoped<UpdateHandlers>();
@@ -38,5 +40,6 @@ builder.Services
 
 var app = builder.Build();
 app.MapBotWebhookRoute<BotController>(route: botConfiguration.Route);
+//app.MapBotWebhookRoute<BotController>(route: EnvVariablesExtensions.GetEnvBotSettings("Route"));
 app.MapControllers();
 app.Run();
