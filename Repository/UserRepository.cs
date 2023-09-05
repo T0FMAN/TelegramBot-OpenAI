@@ -1,4 +1,5 @@
-﻿using Telegram.Bot.Types;
+﻿using Microsoft.EntityFrameworkCore;
+using Telegram.Bot.Types;
 using TelegramBot_OpenAI.Data.DB;
 using TelegramBot_OpenAI.Interfaces;
 using TelegramBot_OpenAI.Models;
@@ -14,25 +15,28 @@ namespace TelegramBot_OpenAI.Repository
             _context = context;
         }
 
-        async Task<TelegramUser> IUserRepository.GetById(long id)
+        public async Task<TelegramUser> GetById(long id)
         {
-            var user = await _context.Users.FindAsync(id);
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.TelegramId == id);
 
             return user;
         }
 
-        bool IUserRepository.Add(TelegramUser user)
+        public async Task<bool> Add(TelegramUser user)
         {
-            throw new NotImplementedException();
+            await _context.Users.AddAsync(user);
+
+            return await Save();
         }
 
-
-        bool IUserRepository.Save()
+        public async Task<bool> Save()
         {
-            throw new NotImplementedException();
+            var saved = await _context.SaveChangesAsync();
+
+            return saved > 0;
         }
 
-        bool IUserRepository.Update(TelegramUser user)
+        public async Task<bool> Update(TelegramUser user)
         {
             throw new NotImplementedException();
         }
