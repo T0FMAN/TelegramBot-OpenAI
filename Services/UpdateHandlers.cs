@@ -5,6 +5,7 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBot_OpenAI.Interfaces;
+using TelegramBot_OpenAI.Models;
 
 namespace TelegramBot_OpenAI.Services
 {
@@ -13,6 +14,7 @@ namespace TelegramBot_OpenAI.Services
         private readonly ITelegramBotClient _botClient;
         private readonly IUserRepository _userRepository;
         private readonly ILogger<UpdateHandlers> _logger;
+        private TelegramUser _user;
 
         public UpdateHandlers(ITelegramBotClient botClient, IUserRepository userRepository, ILogger<UpdateHandlers> logger)
         {
@@ -21,9 +23,7 @@ namespace TelegramBot_OpenAI.Services
             _logger = logger;
         }
 
-        #pragma warning disable IDE0060 // Remove unused parameter
         public Task HandleErrorAsync(Exception exception, CancellationToken cancellationToken)
-        #pragma warning restore IDE0060 // Remove unused parameter
         {
             var ErrorMessage = exception switch
             {
@@ -37,6 +37,11 @@ namespace TelegramBot_OpenAI.Services
 
         public async Task HandleUpdateAsync(Update update, CancellationToken cancellationToken)
         {
+            if (update.Message!.Chat.Type is not ChatType.Private)
+                return;
+
+            _user = await _userRepository.GetById(update.Message.Chat.Id);
+
             var handler = update switch
             {
                 // UpdateType.Unknown:

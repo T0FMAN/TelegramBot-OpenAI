@@ -3,6 +3,10 @@ using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot.Types;
 using Telegram.Bot;
 using System.Net.Http.Headers;
+using TelegramBot_OpenAI.Models;
+using System.Diagnostics.Eventing.Reader;
+using TelegramBot_OpenAI.Interfaces;
+using TelegramBot_OpenAI.Data.Enums;
 
 namespace TelegramBot_OpenAI.Services
 {
@@ -16,14 +20,13 @@ namespace TelegramBot_OpenAI.Services
 
             var action = messageText.Split(' ')[0] switch
             {
-                //"/photoGPT" => GeneratePhotoChatGPT(_botClient, message, cancellationToken),
                 "/inline_keyboard" => SendInlineKeyboard(_botClient, message, cancellationToken),
                 "/keyboard" => SendReplyKeyboard(_botClient, message, cancellationToken),
                 "/remove" => RemoveKeyboard(_botClient, message, cancellationToken),
                 "/photo" => SendFile(_botClient, message, cancellationToken),
                 "/request" => RequestContactAndLocation(_botClient, message, cancellationToken),
                 "/inline_mode" => StartInlineQuery(_botClient, message, cancellationToken),
-                _ => Usage(_botClient, message, cancellationToken)
+                _ => Usage(_user, _userRepository, _botClient, message, cancellationToken)
             };
             Message sentMessage = await action;
             _logger.LogInformation("The message was sent with id: {SentMessageId}", sentMessage.MessageId);
@@ -124,19 +127,31 @@ namespace TelegramBot_OpenAI.Services
                     cancellationToken: cancellationToken);
             }
 
-            static async Task<Message> Usage(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+            static async Task<Message> Usage(TelegramUser user, IUserRepository repository, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
             {
-                const string usage = "Usage:\n" +
-                                     "/inline_keyboard - send inline keyboard\n" +
-                                     "/keyboard    - send custom keyboard\n" +
-                                     "/remove      - remove custom keyboard\n" +
-                                     "/photo       - send a photo\n" +
-                                     "/request     - request location or contact\n" +
-                                     "/inline_mode - send keyboard with Inline Query";
+                string answer;
+
+                if (user is null)
+                {
+                    answer = "Its your first launch";
+
+                    var telegramId = message.Chat.Id;
+                    var userName = message.Chat.Username;
+                    var bio = message.Chat.Bio;
+                    var lastActionDate = DateTime.Now.ToUniversalTime();
+                    var userAction = UserAction.Regestration;
+
+                    var isReg = await repository.Add(new TelegramUser(telegramId, userName, bio, lastActionDate, userAction));
+
+                    await botClient.SendTextMessageAsync(message.Chat.Id, isReg.ToString());
+                }
+                else if (user.IsReg)
+                    answer = "You are reg";
+                else answer = "You are not reg";
 
                 return await botClient.SendTextMessageAsync(
                     chatId: message.Chat.Id,
-                    text: usage,
+                    text: answer,
                     replyMarkup: new ReplyKeyboardRemove(),
                     cancellationToken: cancellationToken);
             }

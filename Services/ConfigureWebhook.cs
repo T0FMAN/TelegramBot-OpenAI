@@ -2,6 +2,7 @@
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using TelegramBot_OpenAI.Configurations;
+using TelegramBot_OpenAI.Extensions;
 
 namespace TelegramBot_OpenAI.Services
 {
@@ -28,8 +29,8 @@ namespace TelegramBot_OpenAI.Services
 
             // Configure custom endpoint per Telegram API recommendations:
             // https://core.telegram.org/bots/api#setwebhook
-            // If you'd like to make sure that the webhook was set by you, you can specify secret data
-            // in the parameter secret_token. If specified, the request will contain a header
+            //If you'd like to make sure that the webhook was set by you, you can specify secret data
+            // in the parameter secret_token.If specified, the request will contain a header
             // "X-Telegram-Bot-Api-Secret-Token" with the secret token as content.
             var webhookAddress = $"{_botConfig.HostAddress}{_botConfig.Route}";
             _logger.LogInformation("Setting webhook: {WebhookAddress}", webhookAddress);
@@ -39,6 +40,19 @@ namespace TelegramBot_OpenAI.Services
                 secretToken: _botConfig.SecretToken,
                 dropPendingUpdates: true,
                 cancellationToken: cancellationToken);
+
+            //var hostAddress = EnvVariablesExtensions.GetEnvBotSettings("HostAdress");
+            //var route = EnvVariablesExtensions.GetEnvBotSettings("Route");
+            //var secretToken = EnvVariablesExtensions.GetEnvBotSettings("SecretToken");
+
+            //var webhookAddress = $"{hostAddress}{route}";
+            //_logger.LogInformation("Setting webhook: {WebhookAddress}", webhookAddress);
+            //await botClient.SetWebhookAsync(
+            //    url: webhookAddress,
+            //    allowedUpdates: Array.Empty<UpdateType>(),
+            //    secretToken: secretToken,
+            //    dropPendingUpdates: true,
+            //    cancellationToken: cancellationToken);
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)
