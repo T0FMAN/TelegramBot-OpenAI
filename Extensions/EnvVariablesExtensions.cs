@@ -24,6 +24,21 @@ namespace TelegramBot_OpenAI.Extensions
             Environment.SetEnvironmentVariable("SecretToken", configuration.SecretToken);
         }
 
+        public static string GetEnvConnectionString()
+        {
+            return Environment.GetEnvironmentVariable("ConnectionString")!;
+        }
+
+        public static string GetEnvOpenAiToken()
+        {
+            return Environment.GetEnvironmentVariable("OpenAiToken")!;
+        }
+
+        public static string GetEnvBotSettings(string nameOf)
+        {
+            return Environment.GetEnvironmentVariable(nameOf)!;
+        }
+
         public static async Task<bool> SetEnvVariablesFromFile(this string path, FileType fileType)
         {
             var data = await ReadDataFile(path);
