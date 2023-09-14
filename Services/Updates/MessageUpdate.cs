@@ -18,18 +18,49 @@ namespace TelegramBot_OpenAI.Services
             if (message.Text is not { } messageText)
                 return;
 
-            var action = messageText.Split(' ')[0] switch
+            Task<Message> action;
+
+            if (_user is null)
+                action = FirstLaunchCommand(_user, _botClient, message, cancellationToken);
+            else if (_user.IsReg is false)
+                action = Regestration(_user, _botClient, message, cancellationToken);
+            else
             {
-                "/inline_keyboard" => SendInlineKeyboard(_botClient, message, cancellationToken),
-                "/keyboard" => SendReplyKeyboard(_botClient, message, cancellationToken),
-                "/remove" => RemoveKeyboard(_botClient, message, cancellationToken),
-                "/photo" => SendFile(_botClient, message, cancellationToken),
-                "/request" => RequestContactAndLocation(_botClient, message, cancellationToken),
-                "/inline_mode" => StartInlineQuery(_botClient, message, cancellationToken),
-                _ => Usage(_user, _userRepository, _botClient, message, cancellationToken)
-            };
+                action = messageText.Split(' ')[0] switch
+                {
+                    "/me" => AboutMeCommand(_botClient, message, cancellationToken),
+                    "/inline_keyboard" => SendInlineKeyboard(_botClient, message, cancellationToken),
+                    "/keyboard" => SendReplyKeyboard(_botClient, message, cancellationToken),
+                    "/remove" => RemoveKeyboard(_botClient, message, cancellationToken),
+                    "/photo" => SendFile(_botClient, message, cancellationToken),
+                    "/request" => RequestContactAndLocation(_botClient, message, cancellationToken),
+                    "/inline_mode" => StartInlineQuery(_botClient, message, cancellationToken),
+                    _ => Usage(_user, _userRepository, _botClient, message, cancellationToken)
+                };
+            }
+
             Message sentMessage = await action;
             _logger.LogInformation("The message was sent with id: {SentMessageId}", sentMessage.MessageId);
+
+            static async Task<Message> FirstLaunchCommand(TelegramUser? user, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+            {
+                return await botClient.SendTextMessageAsync(message.Chat.Id, "");
+            }
+
+            static async Task<Message> Regestration(TelegramUser user, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+            {
+                switch (user.UserAction)
+                {
+                    
+                }
+
+                return await botClient.SendTextMessageAsync(message.Chat.Id, "");
+            }
+
+            static async Task<Message> AboutMeCommand(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+            {
+                return await botClient.SendTextMessageAsync(message.Chat.Id, "");
+            }
 
             static async Task<Message> SendInlineKeyboard(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
             {

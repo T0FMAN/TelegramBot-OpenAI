@@ -13,7 +13,7 @@ namespace TelegramBot_OpenAI.Data.DB
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             var connectionString = Environment.GetEnvironmentVariable("ConnectionString") ?? 
-                throw new Exception("Variable 'ConnectionString' is not set in env.");
+                throw new Exception("Enviroment variable 'ConnectionString' is not setted");
 
             optionsBuilder.UseSqlServer(connectionString);
         }
