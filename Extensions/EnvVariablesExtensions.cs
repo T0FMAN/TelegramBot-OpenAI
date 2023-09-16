@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using TelegramBot_OpenAI.Configurations;
 using TelegramBot_OpenAI.Data.Enums;
+using static TelegramBot_OpenAI.Extensions.FileExtensions;
 
 namespace TelegramBot_OpenAI.Extensions
 {
@@ -39,11 +40,9 @@ namespace TelegramBot_OpenAI.Extensions
             return Environment.GetEnvironmentVariable(nameOf)!;
         }
 
-        public static async Task<bool> SetEnvVariablesFromFile(this string path, FileType fileType)
+        public static async Task SetEnvVariablesFromFile(this string path, FileType fileType)
         {
-            var data = await ReadDataFile(path);
-
-            if (data is null) return false;
+            var data = await ReadDataFile(path) ?? throw new Exception("File is EMPTY!");
 
             switch (fileType)
             {
@@ -51,11 +50,11 @@ namespace TelegramBot_OpenAI.Extensions
                     {
                         var secrets = ReadSecretsFromJSON(data);
 
-                        SetEnvConnectionString(secrets.ConnectionString);
+                        //SetEnvConnectionString(secrets.ConnectionString);
                         SetEnvOpenAiToken(secrets.OpenAiToken);
                         SetEnvBotSettings(secrets.BotConfiguration);
+                        break;
                     }
-                return true;
 
                 case FileType.SH: 
                     {
@@ -66,10 +65,8 @@ namespace TelegramBot_OpenAI.Extensions
                             Environment.SetEnvironmentVariable(secret.Key, secret.Value);
                             Console.WriteLine($"Environment variable {secret.Key} is succes set");
                         }
-                    } 
-                return true;
-
-                default: return false;
+                        break;
+                    }
             }
         }
 
@@ -83,8 +80,6 @@ namespace TelegramBot_OpenAI.Extensions
 
                 foreach (var pair in pairs)
                 {
-
-
                     string[] keyValuePairs = pair.Split('=');
                     string key = keyValuePairs[0]; 
                     string value = keyValuePairs[1];
@@ -114,23 +109,6 @@ namespace TelegramBot_OpenAI.Extensions
             }
 
             return secretsConfiguration;
-        }
-
-        private static async Task<string> ReadDataFile(string path)
-        {
-            string data = string.Empty;
-
-            try
-            {
-                using StreamReader reader = new(path);
-                data = await reader.ReadToEndAsync();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-
-            return data;
         }
     }
 }

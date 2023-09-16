@@ -1,26 +1,28 @@
-using Telegram.Bot;
-using TelegramBot_OpenAI.Controllers;
-using TelegramBot_OpenAI.Services;
-using TelegramBot_OpenAI.Configurations;
-using TelegramBot_OpenAI.Extensions;
-using TelegramBot_OpenAI.Data.Enums;
-using TelegramBot_OpenAI.Data.DB;
 using Microsoft.EntityFrameworkCore;
+using Telegram.Bot;
+using TelegramBot_OpenAI.Configurations;
+using TelegramBot_OpenAI.Controllers;
+using TelegramBot_OpenAI.Data.DB;
+using TelegramBot_OpenAI.Extensions;
 using TelegramBot_OpenAI.Interfaces;
 using TelegramBot_OpenAI.Repository;
+using TelegramBot_OpenAI.Services;
 
 var path = Environment.CurrentDirectory + "\\secrets.json";
-var set = await path.SetEnvVariablesFromFile(FileType.JSON);
-if (!set) throw new Exception("Env variables not setted..");
 
 var builder = WebApplication.CreateBuilder(args);
-
 builder.Configuration.AddJsonFile(path);
+
 var botConfigurationSection = builder.Configuration.GetSection(BotConfiguration.Configuration);
+var connectionString = builder.Configuration.GetConnectionString("SqlServer");
+var openAiToken = builder.Configuration.GetOpenAiToken();
 
 builder.Services.Configure<BotConfiguration>(botConfigurationSection);
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddDbContext<AppDbContext>(options => {});
+builder.Services.AddDbContext<AppDbContext>(options => 
+{
+    options.UseSqlServer(connectionString);
+});
 
 var botConfiguration = botConfigurationSection.Get<BotConfiguration>();
 
@@ -29,7 +31,6 @@ builder.Services.AddHttpClient("telegram_bot_client")
                 {
                     BotConfiguration? botConfig = sp.GetConfiguration<BotConfiguration>();
                     TelegramBotClientOptions options = new(botConfig.BotToken);
-                    //TelegramBotClientOptions options = new(EnvVariablesExtensions.GetEnvBotSettings("BotToken"));
                     return new TelegramBotClient(options, httpClient);
                 });
 builder.Services.AddScoped<UpdateHandlers>();
@@ -40,6 +41,5 @@ builder.Services
 
 var app = builder.Build();
 app.MapBotWebhookRoute<BotController>(route: botConfiguration.Route);
-//app.MapBotWebhookRoute<BotController>(route: EnvVariablesExtensions.GetEnvBotSettings("Route"));
 app.MapControllers();
 app.Run();

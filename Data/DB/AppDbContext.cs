@@ -10,13 +10,13 @@ namespace TelegramBot_OpenAI.Data.DB
             
         }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            var connectionString = Environment.GetEnvironmentVariable("ConnectionString") ?? 
-                throw new Exception("Enviroment variable 'ConnectionString' is not setted");
+        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //{
+        //    //var connectionString = Environment.GetEnvironmentVariable("ConnectionString") ?? 
+        //    //    throw new Exception("Enviroment variable 'ConnectionString' is not setted");
 
-            optionsBuilder.UseSqlServer(connectionString);
-        }
+        //    optionsBuilder.UseSqlServer(connectionString);
+        //}
 
         public DbSet<TelegramUser> Users { get; set; }
         public DbSet<GeneratedImage> GeneratedImages { get; set; }

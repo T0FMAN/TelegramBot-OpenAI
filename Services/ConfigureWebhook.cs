@@ -40,19 +40,6 @@ namespace TelegramBot_OpenAI.Services
                 secretToken: _botConfig.SecretToken,
                 dropPendingUpdates: true,
                 cancellationToken: cancellationToken);
-
-            //var hostAddress = EnvVariablesExtensions.GetEnvBotSettings("HostAdress");
-            //var route = EnvVariablesExtensions.GetEnvBotSettings("Route");
-            //var secretToken = EnvVariablesExtensions.GetEnvBotSettings("SecretToken");
-
-            //var webhookAddress = $"{hostAddress}{route}";
-            //_logger.LogInformation("Setting webhook: {WebhookAddress}", webhookAddress);
-            //await botClient.SetWebhookAsync(
-            //    url: webhookAddress,
-            //    allowedUpdates: Array.Empty<UpdateType>(),
-            //    secretToken: secretToken,
-            //    dropPendingUpdates: true,
-            //    cancellationToken: cancellationToken);
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)

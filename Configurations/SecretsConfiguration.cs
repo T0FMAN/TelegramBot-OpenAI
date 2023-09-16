@@ -2,8 +2,7 @@
 {
     public class SecretsConfiguration // For json
     {
-        //public readonly string OpenAiConfiguration = "OpenAI_Token";
-        public string ConnectionString { get; init; } = default!;
+        public static readonly string OpenAiConfiguration = "OpenAiToken";
         public string OpenAiToken { get; init; } = default!;
         public BotConfiguration BotConfiguration { get; init; }
     }
