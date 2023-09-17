@@ -15,9 +15,13 @@ namespace TelegramBot_OpenAI.Repository
             _context = context;
         }
 
-        public async Task<TelegramUser> GetById(long id)
+        public async Task<TelegramUser?> GetById(long id, bool tracking)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.TelegramId == id);
+            var user = new TelegramUser();
+
+            if (tracking)
+                user = await _context.Users.FirstOrDefaultAsync(x => x.TelegramId == id);
+            else user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(x => x.TelegramId == id);
 
             return user;
         }
@@ -38,7 +42,9 @@ namespace TelegramBot_OpenAI.Repository
 
         public async Task<bool> Update(TelegramUser user)
         {
-            throw new NotImplementedException();
+            _context.Users.Update(user);
+
+            return await Save();
         }
     }
 }

@@ -7,6 +7,7 @@ using TelegramBot_OpenAI.Models;
 using System.Diagnostics.Eventing.Reader;
 using TelegramBot_OpenAI.Interfaces;
 using TelegramBot_OpenAI.Data.Enums;
+using TelegramBot_OpenAI.Extensions;
 
 namespace TelegramBot_OpenAI.Services
 {
@@ -14,52 +15,104 @@ namespace TelegramBot_OpenAI.Services
     {
         private async Task BotOnMessageReceived(Message message, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Receive message type: {MessageType}", message.Type);
+            _logger.LogInformation("Receive message type: {message.Type}", message.Type);
             if (message.Text is not { } messageText)
                 return;
 
-            Task<Message> action;
-
-            if (_user is null)
-                action = FirstLaunchCommand(_user, _botClient, message, cancellationToken);
-            else if (_user.IsReg is false)
-                action = Regestration(_user, _botClient, message, cancellationToken);
-            else
+            try
             {
-                action = messageText.Split(' ')[0] switch
+                Task<Message> action;
+
+                if (_user is null)
+                    action = FirstLaunchCommand(_user, _userRepository, _botClient, message, cancellationToken);
+                else if (_user.IsReg is false)
+                    action = Regestration(_user, _userRepository, _botClient, message, cancellationToken);
+                else
                 {
-                    "/me" => AboutMeCommand(_botClient, message, cancellationToken),
-                    "/inline_keyboard" => SendInlineKeyboard(_botClient, message, cancellationToken),
-                    "/keyboard" => SendReplyKeyboard(_botClient, message, cancellationToken),
-                    "/remove" => RemoveKeyboard(_botClient, message, cancellationToken),
-                    "/photo" => SendFile(_botClient, message, cancellationToken),
-                    "/request" => RequestContactAndLocation(_botClient, message, cancellationToken),
-                    "/inline_mode" => StartInlineQuery(_botClient, message, cancellationToken),
-                    _ => Usage(_user, _userRepository, _botClient, message, cancellationToken)
-                };
-            }
-
-            Message sentMessage = await action;
-            _logger.LogInformation("The message was sent with id: {SentMessageId}", sentMessage.MessageId);
-
-            static async Task<Message> FirstLaunchCommand(TelegramUser? user, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
-            {
-                return await botClient.SendTextMessageAsync(message.Chat.Id, "");
-            }
-
-            static async Task<Message> Regestration(TelegramUser user, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
-            {
-                switch (user.UserAction)
-                {
-                    
+                    action = messageText.Split(' ')[0] switch
+                    {
+                        "/me" => AboutMeCommand(_user, _botClient, message, cancellationToken),
+                        "/inline_keyboard" => SendInlineKeyboard(_botClient, message, cancellationToken),
+                        "/keyboard" => SendReplyKeyboard(_botClient, message, cancellationToken),
+                        "/remove" => RemoveKeyboard(_botClient, message, cancellationToken),
+                        "/photo" => SendFile(_botClient, message, cancellationToken),
+                        "/request" => RequestContactAndLocation(_botClient, message, cancellationToken),
+                        "/inline_mode" => StartInlineQuery(_botClient, message, cancellationToken),
+                        _ => Usage(_user, _userRepository, _botClient, message, cancellationToken)
+                    };
                 }
 
-                return await botClient.SendTextMessageAsync(message.Chat.Id, "");
+                Message sentMessage = await action;
+                _logger.LogInformation("The message was sent with id: {messageId}", sentMessage.MessageId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
             }
 
-            static async Task<Message> AboutMeCommand(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+            static async Task<Message> FirstLaunchCommand(TelegramUser? user, IUserRepository userRepository, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
             {
-                return await botClient.SendTextMessageAsync(message.Chat.Id, "");
+                user = new TelegramUser(telegramId: message.Chat.Id,
+                                        userName: message.Chat.Username,
+                                        bio: message.Chat.Bio,
+                                        dateTime: DateTime.UtcNow,
+                                        userAction: UserAction.Regestration);
+                
+                var add = await userRepository.Add(user);
+
+                if (!add)
+                    await TelegramExtenisons.ExceptionActionWithDataBase(
+                        botClient: botClient, 
+                        chatId: message.Chat.Id, 
+                        table: nameof(user).ToRightNameOfTable(), 
+                        operation: TableOperation.add,
+                        cancellationToken: cancellationToken);
+
+                return await botClient.SendTextMessageAsync(chatId: message.Chat.Id, 
+                                                            text: "Hello! This is Chat-GPT bot.\n\n" +
+                                                                  "To continue working with the bot, you need to enter your age (18 - 100)",
+                                                            cancellationToken: cancellationToken);
+            }
+
+            static async Task<Message> Regestration(TelegramUser user, IUserRepository userRepository, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+            {
+                var isAge = int.TryParse(message.Text, out int age);
+
+                if (!isAge || age > 100 || age < 18)
+                    return await botClient.SendTextMessageAsync(chatId: message.Chat.Id, 
+                                                                text: "You entered an incorrect age\n\n" +
+                                                                      "You must enter the age from 18 to 100",
+                                                                cancellationToken: cancellationToken);
+
+                user.RegestrationDate = DateTime.UtcNow;
+                user.IsReg = true;
+                user.Age = age;
+
+                var update = await userRepository.Update(user);
+
+                if (!update)
+                    await TelegramExtenisons.ExceptionActionWithDataBase(
+                        botClient: botClient,
+                        chatId: message.Chat.Id,
+                        table: nameof(user).ToRightNameOfTable(),
+                        operation: TableOperation.update,
+                        cancellationToken: cancellationToken);
+
+                return await botClient.SendTextMessageAsync(chatId: message.Chat.Id, 
+                                                            text: "You have successfully registered!\n\n" +
+                                                                  "Check out the functionality",
+                                                            replyMarkup: TelegramKeyboardExtensions.Menu,
+                                                            cancellationToken: cancellationToken);
+            }
+
+            static async Task<Message> AboutMeCommand(TelegramUser user, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+            {
+                var text = $"Regestration date: {user.RegestrationDate}\n" +
+                           $"Account balance: {user.AccountBalance}$";
+
+                return await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
+                                                            text: text,
+                                                            cancellationToken: cancellationToken);
             }
 
             static async Task<Message> SendInlineKeyboard(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)

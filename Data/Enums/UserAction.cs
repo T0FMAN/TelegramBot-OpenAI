@@ -3,9 +3,8 @@
     public enum UserAction
     {
         None = 0,
-        StartBot = 1,
-        Regestration = 2,
-        GeneratePhoto = 3,
-        GenerateText = 4,
+        Regestration = 1,
+        GeneratePhoto = 2,
+        GenerateText = 3,
     }
 }

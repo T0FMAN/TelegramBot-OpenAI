@@ -14,7 +14,7 @@ namespace TelegramBot_OpenAI.Services
         private readonly ITelegramBotClient _botClient;
         private readonly IUserRepository _userRepository;
         private readonly ILogger<UpdateHandlers> _logger;
-        private TelegramUser _user;
+        private TelegramUser? _user;
 
         public UpdateHandlers(ITelegramBotClient botClient, IUserRepository userRepository, ILogger<UpdateHandlers> logger)
         {
@@ -40,7 +40,7 @@ namespace TelegramBot_OpenAI.Services
             if (update.Message!.Chat.Type is not ChatType.Private)
                 return;
 
-            _user = await _userRepository.GetById(update.Message.Chat.Id);
+            _user = await _userRepository.GetById(update.Message.Chat.Id, true);
 
             var handler = update switch
             {
