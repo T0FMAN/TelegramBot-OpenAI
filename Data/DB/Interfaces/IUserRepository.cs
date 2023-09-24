@@ -1,6 +1,6 @@
 ﻿using TelegramBot_OpenAI.Models;
 
-namespace TelegramBot_OpenAI.Interfaces
+namespace TelegramBot_OpenAI.Data.DB.Interfaces
 {
     public interface IUserRepository
     {

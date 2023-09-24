@@ -1,10 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Telegram.Bot.Types;
-using TelegramBot_OpenAI.Data.DB;
-using TelegramBot_OpenAI.Interfaces;
+using TelegramBot_OpenAI.Data.DB.Interfaces;
 using TelegramBot_OpenAI.Models;
 
-namespace TelegramBot_OpenAI.Repository
+namespace TelegramBot_OpenAI.Data.DB.Repository
 {
     public class UserRepository : IUserRepository
     {
@@ -17,7 +15,7 @@ namespace TelegramBot_OpenAI.Repository
 
         public async Task<TelegramUser?> GetById(long id, bool tracking)
         {
-            var user = new TelegramUser();
+            TelegramUser? user;
 
             if (tracking)
                 user = await _context.Users.FirstOrDefaultAsync(x => x.TelegramId == id);

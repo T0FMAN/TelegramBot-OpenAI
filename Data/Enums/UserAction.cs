@@ -2,9 +2,11 @@
 {
     public enum UserAction
     {
-        None = 0,
-        Regestration = 1,
-        GeneratePhoto = 2,
-        GenerateText = 3,
+        None,
+        Regestration,
+        ChooseModel,
+        ChooseWhatGenerate,
+        GeneratePhoto,
+        GenerateText,
     }
 }

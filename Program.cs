@@ -3,26 +3,23 @@ using Telegram.Bot;
 using TelegramBot_OpenAI.Configurations;
 using TelegramBot_OpenAI.Controllers;
 using TelegramBot_OpenAI.Data.DB;
+using TelegramBot_OpenAI.Data.DB.Interfaces;
+using TelegramBot_OpenAI.Data.DB.Repository;
 using TelegramBot_OpenAI.Extensions;
-using TelegramBot_OpenAI.Interfaces;
-using TelegramBot_OpenAI.Repository;
 using TelegramBot_OpenAI.Services;
 
-var path = Environment.CurrentDirectory + "\\secrets.json";
-
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.AddJsonFile(path);
 
 var botConfigurationSection = builder.Configuration.GetSection(BotConfiguration.Configuration);
 var connectionString = builder.Configuration.GetConnectionString("SqlServer");
 var openAiToken = builder.Configuration.GetOpenAiToken();
 
-builder.Services.Configure<BotConfiguration>(botConfigurationSection);
+EnvVariablesExtensions.SetEnvOpenAiToken(openAiToken);
+
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddDbContext<AppDbContext>(options => 
-{
-    options.UseSqlServer(connectionString);
-});
+builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
+
+builder.Services.Configure<BotConfiguration>(botConfigurationSection);
 
 var botConfiguration = botConfigurationSection.Get<BotConfiguration>();
 

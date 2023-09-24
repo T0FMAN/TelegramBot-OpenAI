@@ -1,13 +1,11 @@
-﻿using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
+﻿using Telegram.Bot;
 using Telegram.Bot.Types;
-using Telegram.Bot;
-using System.Net.Http.Headers;
-using TelegramBot_OpenAI.Models;
-using System.Diagnostics.Eventing.Reader;
-using TelegramBot_OpenAI.Interfaces;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
+using TelegramBot_OpenAI.Data.DB.Interfaces;
 using TelegramBot_OpenAI.Data.Enums;
 using TelegramBot_OpenAI.Extensions;
+using TelegramBot_OpenAI.Models;
 
 namespace TelegramBot_OpenAI.Services
 {
@@ -24,20 +22,15 @@ namespace TelegramBot_OpenAI.Services
                 Task<Message> action;
 
                 if (_user is null)
-                    action = FirstLaunchCommand(_user, _userRepository, _botClient, message, cancellationToken);
+                    action = FirstLaunchCommand(_userRepository, _botClient, message, cancellationToken);
                 else if (_user.IsReg is false)
                     action = Regestration(_user, _userRepository, _botClient, message, cancellationToken);
                 else
                 {
                     action = messageText.Split(' ')[0] switch
                     {
-                        "/me" => AboutMeCommand(_user, _botClient, message, cancellationToken),
-                        "/inline_keyboard" => SendInlineKeyboard(_botClient, message, cancellationToken),
-                        "/keyboard" => SendReplyKeyboard(_botClient, message, cancellationToken),
-                        "/remove" => RemoveKeyboard(_botClient, message, cancellationToken),
-                        "/photo" => SendFile(_botClient, message, cancellationToken),
-                        "/request" => RequestContactAndLocation(_botClient, message, cancellationToken),
-                        "/inline_mode" => StartInlineQuery(_botClient, message, cancellationToken),
+                        "/me" or "👤Profile" => AboutMeCommand(_user, _botClient, message, cancellationToken),
+                        "/generate" or "🛠Generate!" => StartGenerateCommand(_user, _userRepository, _botClient, message, cancellationToken),
                         _ => Usage(_user, _userRepository, _botClient, message, cancellationToken)
                     };
                 }
@@ -50,9 +43,9 @@ namespace TelegramBot_OpenAI.Services
                 _logger.LogError(ex.Message);
             }
 
-            static async Task<Message> FirstLaunchCommand(TelegramUser? user, IUserRepository userRepository, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+            static async Task<Message> FirstLaunchCommand(IUserRepository userRepository, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
             {
-                user = new TelegramUser(telegramId: message.Chat.Id,
+                var user = new TelegramUser(telegramId: message.Chat.Id,
                                         userName: message.Chat.Username,
                                         bio: message.Chat.Bio,
                                         dateTime: DateTime.UtcNow,
@@ -108,107 +101,40 @@ namespace TelegramBot_OpenAI.Services
             static async Task<Message> AboutMeCommand(TelegramUser user, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
             {
                 var text = $"Regestration date: {user.RegestrationDate}\n" +
-                           $"Account balance: {user.AccountBalance}$";
+                           $"Account balance: {user.AccountBalance}$\n" +
+                           $"Count generations: {user.CountGenerations}";
 
                 return await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
                                                             text: text,
                                                             cancellationToken: cancellationToken);
             }
 
-            static async Task<Message> SendInlineKeyboard(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+            static async Task<Message> StartGenerateCommand(TelegramUser user, IUserRepository userRepository, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
             {
-                await botClient.SendChatActionAsync(
-                    chatId: message.Chat.Id,
-                    chatAction: ChatAction.Typing,
-                    cancellationToken: cancellationToken);
-
-                // Simulate longer running task
-                await Task.Delay(500, cancellationToken);
-
-                InlineKeyboardMarkup inlineKeyboard = new(
-                    new[]
-                    {
-                    // first row
-                    new []
-                    {
-                        InlineKeyboardButton.WithCallbackData("1.1", "11"),
-                        InlineKeyboardButton.WithCallbackData("1.2", "12"),
-                    },
-                    // second row
-                    new []
-                    {
-                        InlineKeyboardButton.WithCallbackData("2.1", "21"),
-                        InlineKeyboardButton.WithCallbackData("2.2", "22"),
-                    },
-                    });
-
-                return await botClient.SendTextMessageAsync(
-                    chatId: message.Chat.Id,
-                    text: "Choose",
-                    replyMarkup: inlineKeyboard,
-                    cancellationToken: cancellationToken);
-            }
-
-            static async Task<Message> SendReplyKeyboard(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
-            {
-                ReplyKeyboardMarkup replyKeyboardMarkup = new(
-                    new[]
-                    {
-                        new KeyboardButton[] { "1.1", "1.2" },
-                        new KeyboardButton[] { "2.1", "2.2" },
-                    })
+                if (user.CountGenerations == 0)
                 {
-                    ResizeKeyboard = true
-                };
+                    user.UserAction = UserAction.ChooseModel;
 
-                return await botClient.SendTextMessageAsync(
-                    chatId: message.Chat.Id,
-                    text: "Choose",
-                    replyMarkup: replyKeyboardMarkup,
-                    cancellationToken: cancellationToken);
-            }
+                    var updated = await userRepository.Update(user);
 
-            static async Task<Message> RemoveKeyboard(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
-            {
-                return await botClient.SendTextMessageAsync(
-                    chatId: message.Chat.Id,
-                    text: "Removing keyboard",
-                    replyMarkup: new ReplyKeyboardRemove(),
-                    cancellationToken: cancellationToken);
-            }
+                    return await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
+                                                                text: "Choose model\n\n P.S\n" +
+                                                                      "This is a <b>one-time</b> action, since you have not yet set the model to automatically select the generation model.\n" +
+                                                                      "At any time, you can cancel the selection and change it in the profile settings)",
+                                                                parseMode: ParseMode.Html,
+                                                                cancellationToken: cancellationToken);
+                }
+                else
+                {
+                    user.UserAction = UserAction.ChooseWhatGenerate;
 
-            static async Task<Message> SendFile(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
-            {
-                await botClient.SendChatActionAsync(
-                    message.Chat.Id,
-                    ChatAction.UploadPhoto,
-                    cancellationToken: cancellationToken);
+                    var updated = await userRepository.Update(user);
 
-                const string filePath = "Files/tux.png";
-                await using FileStream fileStream = new(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                var fileName = filePath.Split(Path.DirectorySeparatorChar).Last();
-
-                return await botClient.SendPhotoAsync(
-                    chatId: message.Chat.Id,
-                    photo: new InputFileStream(fileStream, fileName),
-                    caption: "Nice Picture",
-                    cancellationToken: cancellationToken);
-            }
-
-            static async Task<Message> RequestContactAndLocation(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
-            {
-                ReplyKeyboardMarkup RequestReplyKeyboard = new(
-                    new[]
-                    {
-                    KeyboardButton.WithRequestLocation("Location"),
-                    KeyboardButton.WithRequestContact("Contact"),
-                    });
-
-                return await botClient.SendTextMessageAsync(
-                    chatId: message.Chat.Id,
-                    text: "Who or Where are you?",
-                    replyMarkup: RequestReplyKeyboard,
-                    cancellationToken: cancellationToken);
+                    return await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
+                                                                text: "Choose what you want to generate",
+                                                                replyMarkup: TelegramKeyboardExtensions.ChooseWhatGenerate,
+                                                                cancellationToken: cancellationToken);
+                }
             }
 
             static async Task<Message> Usage(TelegramUser user, IUserRepository repository, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
@@ -237,18 +163,6 @@ namespace TelegramBot_OpenAI.Services
                     chatId: message.Chat.Id,
                     text: answer,
                     replyMarkup: new ReplyKeyboardRemove(),
-                    cancellationToken: cancellationToken);
-            }
-
-            static async Task<Message> StartInlineQuery(ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
-            {
-                InlineKeyboardMarkup inlineKeyboard = new(
-                    InlineKeyboardButton.WithSwitchInlineQueryCurrentChat("Inline Mode"));
-
-                return await botClient.SendTextMessageAsync(
-                    chatId: message.Chat.Id,
-                    text: "Press the button to start Inline Query",
-                    replyMarkup: inlineKeyboard,
                     cancellationToken: cancellationToken);
             }
         }

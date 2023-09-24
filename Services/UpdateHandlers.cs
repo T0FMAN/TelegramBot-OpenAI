@@ -4,7 +4,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.ReplyMarkups;
-using TelegramBot_OpenAI.Interfaces;
+using TelegramBot_OpenAI.Data.DB.Interfaces;
 using TelegramBot_OpenAI.Models;
 
 namespace TelegramBot_OpenAI.Services
@@ -50,6 +50,7 @@ namespace TelegramBot_OpenAI.Services
                 // UpdateType.ShippingQuery:
                 // UpdateType.PreCheckoutQuery:
                 // UpdateType.Poll:
+                { ChatMember: { } member } => BotOnChatMemberReceived(member, cancellationToken),
                 { Message: { } message } => BotOnMessageReceived(message, cancellationToken),
                 { EditedMessage: { } message } => BotOnMessageReceived(message, cancellationToken),
                 { CallbackQuery: { } callbackQuery } => BotOnCallbackQueryReceived(callbackQuery, cancellationToken),
@@ -60,6 +61,8 @@ namespace TelegramBot_OpenAI.Services
 
             await handler;
         }
+
+        private async Task BotOnChatMemberReceived(ChatMemberUpdated member, CancellationToken cancellationToken) { }
 
         #region Inline Mode
 
