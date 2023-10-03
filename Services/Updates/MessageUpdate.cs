@@ -4,12 +4,12 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBot_OpenAI.Data.DB.Interfaces;
 using TelegramBot_OpenAI.Data.Enums;
-using TelegramBot_OpenAI.Extensions;
 using TelegramBot_OpenAI.Models;
+using static TelegramBot_OpenAI.Helpers.TelegramMessagesHelper;
 
-namespace TelegramBot_OpenAI.Services
+namespace TelegramBot_OpenAI.Services.Updates
 {
-    public partial class UpdateHandlers // Message update
+    public partial class UpdateHandlers // In this part - messages update
     {
         private async Task BotOnMessageReceived(Message message, CancellationToken cancellationToken)
         {
@@ -23,7 +23,7 @@ namespace TelegramBot_OpenAI.Services
 
                 if (_user is null)
                     action = FirstLaunchCommand(_userRepository, _botClient, message, cancellationToken);
-                else if (_user.IsReg is false)
+                else if (!_user.IsReg)
                     action = Regestration(_user, _userRepository, _botClient, message, cancellationToken);
                 else
                 {
@@ -46,25 +46,18 @@ namespace TelegramBot_OpenAI.Services
             static async Task<Message> FirstLaunchCommand(IUserRepository userRepository, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
             {
                 var user = new TelegramUser(telegramId: message.Chat.Id,
-                                        userName: message.Chat.Username,
-                                        bio: message.Chat.Bio,
-                                        dateTime: DateTime.UtcNow,
-                                        userAction: UserAction.Regestration);
-                
-                var add = await userRepository.Add(user);
+                                            userName: message.Chat.Username,
+                                            bio: message.Chat.Bio,
+                                            dateTime: DateTime.UtcNow,
+                                            userAction: UserAction.Regestration);
 
-                if (!add)
-                    await TelegramExtenisons.ExceptionActionWithDataBase(
-                        botClient: botClient, 
-                        chatId: message.Chat.Id, 
-                        table: nameof(user).ToRightNameOfTable(), 
-                        operation: TableOperation.add,
-                        cancellationToken: cancellationToken);
-
-                return await botClient.SendTextMessageAsync(chatId: message.Chat.Id, 
-                                                            text: "Hello! This is Chat-GPT bot.\n\n" +
-                                                                  "To continue working with the bot, you need to enter your age (18 - 100)",
-                                                            cancellationToken: cancellationToken);
+                return await MessageByActionWithTableUsers(operation: TableOperation.add,
+                                                           user: user,
+                                                           text: "Hello! This is Chat-GPT bot.\n\n" +
+                                                                 "To continue working with the bot, you need to enter your age (18 - 100)",
+                                                           userRepository: userRepository,
+                                                           botClient: botClient,
+                                                           cancellationToken: cancellationToken);
             }
 
             static async Task<Message> Regestration(TelegramUser user, IUserRepository userRepository, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
@@ -81,21 +74,16 @@ namespace TelegramBot_OpenAI.Services
                 user.IsReg = true;
                 user.Age = age;
 
-                var update = await userRepository.Update(user);
+                var keyboard = TelegramKeyboards.GetReplyKeyboardMarkup(ReplyKeyboards.Menu);
 
-                if (!update)
-                    await TelegramExtenisons.ExceptionActionWithDataBase(
-                        botClient: botClient,
-                        chatId: message.Chat.Id,
-                        table: nameof(user).ToRightNameOfTable(),
-                        operation: TableOperation.update,
-                        cancellationToken: cancellationToken);
-
-                return await botClient.SendTextMessageAsync(chatId: message.Chat.Id, 
-                                                            text: "You have successfully registered!\n\n" +
-                                                                  "Check out the functionality",
-                                                            replyMarkup: TelegramKeyboardExtensions.Menu,
-                                                            cancellationToken: cancellationToken);
+                return await MessageByActionWithTableUsers(operation: TableOperation.update,
+                                                           user: user,
+                                                           text: "You have successfully registered!\n\n" +
+                                                                 "Check out the functionality",
+                                                           userRepository: userRepository,
+                                                           botClient: botClient,
+                                                           replyMarkup: keyboard,
+                                                           cancellationToken: cancellationToken);
             }
 
             static async Task<Message> AboutMeCommand(TelegramUser user, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
@@ -111,59 +99,74 @@ namespace TelegramBot_OpenAI.Services
 
             static async Task<Message> StartGenerateCommand(TelegramUser user, IUserRepository userRepository, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
             {
+                var text = string.Empty;
+                IReplyMarkup keyboard; 
+
                 if (user.CountGenerations == 0)
                 {
                     user.UserAction = UserAction.ChooseModel;
-
-                    var updated = await userRepository.Update(user);
-
-                    return await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
-                                                                text: "Choose model\n\n P.S\n" +
-                                                                      "This is a <b>one-time</b> action, since you have not yet set the model to automatically select the generation model.\n" +
-                                                                      "At any time, you can cancel the selection and change it in the profile settings)",
-                                                                parseMode: ParseMode.Html,
-                                                                cancellationToken: cancellationToken);
+                    text = "Choose model\n\n P.S\n" +
+                           "This is a <b>one-time</b> action, since you have not yet set the model to automatically select the generation model.\n" +
+                           "At any time, you can cancel the selection and change it in the profile settings)";
+                    keyboard = TelegramKeyboards.GetReplyKeyboardMarkup(ReplyKeyboards.ModelsChatGPT);
                 }
                 else
                 {
                     user.UserAction = UserAction.ChooseWhatGenerate;
-
-                    var updated = await userRepository.Update(user);
-
-                    return await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
-                                                                text: "Choose what you want to generate",
-                                                                replyMarkup: TelegramKeyboardExtensions.ChooseWhatGenerate,
-                                                                cancellationToken: cancellationToken);
+                    text = "Choose what you want to generate";
+                    keyboard = TelegramKeyboards.GetInlineKeyboardMarkup(InlineKeyboards.ChooseWhatGenerate);
                 }
+
+                return await MessageByActionWithTableUsers(operation: TableOperation.update,
+                                                           user: user,
+                                                           text: text,
+                                                           userRepository: userRepository,
+                                                           botClient: botClient,
+                                                           cancellationToken: cancellationToken,
+                                                           parseMode: ParseMode.Html,
+                                                           replyMarkup: keyboard);
             }
 
             static async Task<Message> Usage(TelegramUser user, IUserRepository repository, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
             {
-                string answer;
+                var messageParams = message.Text.Split(' ');
 
-                if (user is null)
+                switch (user.UserAction)
                 {
-                    answer = "Its your first launch";
+                    case UserAction.ChooseModel:
+                        {
+                            if (messageParams.Length < 2)
+                                goto default;
 
-                    var telegramId = message.Chat.Id;
-                    var userName = message.Chat.Username;
-                    var bio = message.Chat.Bio;
-                    var lastActionDate = DateTime.Now.ToUniversalTime();
-                    var userAction = UserAction.Regestration;
+                            if (Enum.TryParse<ModelChatGPT>(message.Text.Split(' ')[1], out var model))
+                            {
+                                user.DefaultModelChatGPT = model;
+                                user.UserAction = UserAction.GeneratePhoto;
 
-                    var isReg = await repository.Add(new TelegramUser(telegramId, userName, bio, lastActionDate, userAction));
-
-                    await botClient.SendTextMessageAsync(message.Chat.Id, isReg.ToString());
+                                return await MessageByActionWithTableUsers(operation: TableOperation.update, 
+                                                                           user: user,
+                                                                           text: $"Great! Now your default model is GPT-{model}",
+                                                                           userRepository: repository,
+                                                                           botClient: botClient,
+                                                                           cancellationToken: cancellationToken);
+                            }
+                            else goto default;
+                        }
+                    case UserAction.ChooseWhatGenerate:
+                        {
+                            return await botClient.SendTextMessageAsync(user.TelegramId, "");
+                        }
+                    default: return await DefaultCaseMessage(chatId: message.Chat.Id,
+                                                             botClient: botClient);
                 }
-                else if (user.IsReg)
-                    answer = "You are reg";
-                else answer = "You are not reg";
+            }
 
-                return await botClient.SendTextMessageAsync(
-                    chatId: message.Chat.Id,
-                    text: answer,
-                    replyMarkup: new ReplyKeyboardRemove(),
-                    cancellationToken: cancellationToken);
+            static async Task<Message> DefaultCaseMessage(long chatId, ITelegramBotClient botClient)
+            {
+                return await botClient.SendTextMessageAsync(chatId: chatId, 
+                                                            text: "Undefined message or parameters in message for current action.\n" +
+                                                                  "If you want to return to the menu, write /menu.\n" +
+                                                                  "For restart bot - /restart (or /start)");
             }
         }
     }

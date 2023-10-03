@@ -7,7 +7,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBot_OpenAI.Data.DB.Interfaces;
 using TelegramBot_OpenAI.Models;
 
-namespace TelegramBot_OpenAI.Services
+namespace TelegramBot_OpenAI.Services.Updates
 {
     public partial class UpdateHandlers
     {

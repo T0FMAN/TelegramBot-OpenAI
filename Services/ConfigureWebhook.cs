@@ -2,7 +2,6 @@
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using TelegramBot_OpenAI.Configurations;
-using TelegramBot_OpenAI.Extensions;
 
 namespace TelegramBot_OpenAI.Services
 {

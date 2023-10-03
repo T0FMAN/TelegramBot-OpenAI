@@ -1,7 +1,7 @@
 ﻿using Telegram.Bot.Types;
 using Telegram.Bot;
 
-namespace TelegramBot_OpenAI.Services
+namespace TelegramBot_OpenAI.Services.Updates
 {
     public partial class UpdateHandlers // Callback update
     {

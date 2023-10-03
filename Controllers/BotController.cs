@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Telegram.Bot.Types;
 using TelegramBot_OpenAI.Filters;
-using TelegramBot_OpenAI.Services;
+using TelegramBot_OpenAI.Services.Updates;
 
 namespace TelegramBot_OpenAI.Controllers
 {

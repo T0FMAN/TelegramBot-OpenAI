@@ -1,6 +1,9 @@
-﻿namespace TelegramBot_OpenAI.Extensions
+﻿namespace TelegramBot_OpenAI.Helpers
 {
-    public static class EnvVariablesExtensions
+    /// <summary>
+    /// Represents operations with environment variables
+    /// </summary>
+    public static class EnvVariablesHelper
     {
         private static void SetEnvVariable(string variable, string value)
         {
@@ -15,10 +18,6 @@
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
-            }
-            finally
-            {
-                Environment.Exit(1);
             }
         }
 

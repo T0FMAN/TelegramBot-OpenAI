@@ -17,7 +17,7 @@ namespace TelegramBot_OpenAI.Models
         public DateTime? LastActionDate { get; set; }
         public UserAction UserAction { get; set; } = UserAction.None;
         [ForeignKey(nameof(InvitedUser))]
-        public int? IdInvited { get; init; } // ID user, who invited (not TelegramId)
+        public int? IdInvited { get; set; } // ID user, who invited (not TelegramId)
         public TelegramUser? InvitedUser { get; set; }
         public int? CountReferals { get; set; } = 0;
         public int CountGenerations { get; set; } = 0;

@@ -6,7 +6,9 @@ using TelegramBot_OpenAI.Data.DB;
 using TelegramBot_OpenAI.Data.DB.Interfaces;
 using TelegramBot_OpenAI.Data.DB.Repository;
 using TelegramBot_OpenAI.Extensions;
+using TelegramBot_OpenAI.Helpers;
 using TelegramBot_OpenAI.Services;
+using TelegramBot_OpenAI.Services.Updates;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +16,7 @@ var botConfigurationSection = builder.Configuration.GetSection(BotConfiguration.
 var connectionString = builder.Configuration.GetConnectionString("SqlServer");
 var openAiToken = builder.Configuration.GetOpenAiToken();
 
-EnvVariablesExtensions.SetEnvOpenAiToken(openAiToken);
+EnvVariablesHelper.SetEnvOpenAiToken(openAiToken);
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
