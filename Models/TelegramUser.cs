@@ -23,6 +23,7 @@ namespace TelegramBot_OpenAI.Models
         public int CountGenerations { get; set; } = 0;
         public decimal AccountBalance { get; set; } = 0;
         public ModelChatGPT DefaultModelChatGPT { get; set; } = ModelChatGPT.None;
+        public LangaugeInterface LangaugeInterface { get; set; } = LangaugeInterface.None; 
 
         public TelegramUser() { }
 
