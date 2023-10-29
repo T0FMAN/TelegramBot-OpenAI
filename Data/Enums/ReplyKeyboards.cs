@@ -2,6 +2,7 @@
 {
     public enum ReplyKeyboards
     {
+        LanguageInterface,
         Menu,
         ModelsChatGPT
     }

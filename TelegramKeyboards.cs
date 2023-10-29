@@ -15,6 +15,7 @@ namespace TelegramBot_OpenAI
         {
             return named switch
             {
+                ReplyKeyboards.LanguageInterface => LanguageInterface,
                 ReplyKeyboards.Menu => Menu,
                 ReplyKeyboards.ModelsChatGPT => ModelsChatGPT,
                 _ => throw new Exception(),
@@ -38,6 +39,16 @@ namespace TelegramBot_OpenAI
         }
 
         #region ReplyKeyboards
+        readonly static ReplyKeyboardMarkup LanguageInterface =
+            new(
+                new[]
+                {
+                    new KeyboardButton[] { "English 🇬🇧🇺🇸", "Russian 🇷🇺" },
+                })
+            {
+                ResizeKeyboard = true
+            };
+
         readonly static ReplyKeyboardMarkup Menu =
             new(
                 new[]

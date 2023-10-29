@@ -3,7 +3,6 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
-using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBot_OpenAI.Data.DB.Interfaces;
 using TelegramBot_OpenAI.Models;
 
@@ -62,7 +61,10 @@ namespace TelegramBot_OpenAI.Services.Updates
             await handler;
         }
 
-        private async Task BotOnChatMemberReceived(ChatMemberUpdated member, CancellationToken cancellationToken) { }
+        private async Task BotOnChatMemberReceived(ChatMemberUpdated member, CancellationToken cancellationToken) 
+        { 
+            
+        }
 
         #region Inline Mode
 

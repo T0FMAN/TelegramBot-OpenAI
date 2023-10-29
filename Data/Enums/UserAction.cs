@@ -3,6 +3,8 @@
     public enum UserAction
     {
         None,
+        SelectInterfaceLanguage,
+        EnteredAge,
         Regestration,
         ChooseModel,
         ChooseWhatGenerate,

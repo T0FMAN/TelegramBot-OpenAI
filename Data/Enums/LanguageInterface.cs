@@ -1,6 +1,6 @@
 ﻿namespace TelegramBot_OpenAI.Data.Enums
 {
-    public enum LangaugeInterface
+    public enum LanguageInterface
     {
         None,
         EN,

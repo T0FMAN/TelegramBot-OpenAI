@@ -1,8 +1,10 @@
-﻿using Telegram.Bot;
+﻿using System.ComponentModel;
+using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBot_OpenAI.Data.DB.Interfaces;
+using TelegramBot_OpenAI.Data.DB.Repository;
 using TelegramBot_OpenAI.Data.Enums;
 using TelegramBot_OpenAI.Models;
 using static TelegramBot_OpenAI.Helpers.TelegramMessagesHelper;
@@ -24,7 +26,13 @@ namespace TelegramBot_OpenAI.Services.Updates
                 if (_user is null)
                     action = FirstLaunchCommand(_userRepository, _botClient, message, cancellationToken);
                 else if (!_user.IsReg)
-                    action = Regestration(_user, _userRepository, _botClient, message, cancellationToken);
+                {
+                    if (_user.UserAction is UserAction.SelectInterfaceLanguage)
+                        action = SelectInterfaceLanguage(_user, _userRepository, _botClient, message, cancellationToken);
+                    if (_user.UserAction is UserAction.EnteredAge)
+                        action = EnteredAge(_user, _userRepository, _botClient, message, cancellationToken);
+                    else throw new InvalidEnumArgumentException();
+                }
                 else
                 {
                     action = messageText.Split(' ')[0] switch
@@ -49,31 +57,66 @@ namespace TelegramBot_OpenAI.Services.Updates
                                             userName: message.Chat.Username,
                                             bio: message.Chat.Bio,
                                             dateTime: DateTime.UtcNow,
-                                            userAction: UserAction.Regestration);
+                                            userAction: UserAction.SelectInterfaceLanguage);
+
+                var keyboard = TelegramKeyboards.GetReplyKeyboardMarkup(ReplyKeyboards.LanguageInterface);
 
                 return await MessageByActionWithTableUsers(operation: TableOperation.add,
                                                            user: user,
-                                                           text: "Hello! This is Chat-GPT bot.\n\n" +
-                                                                 "To continue working with the bot, you need to enter your age (18 - 100)",
+                                                           text: "Hello! This is Chat-GPT bot.\n" +
+                                                                 "Доброго времени суток! Это Chat-GPT бот.\n\n" +
+                                                                 "To continue working with the bot, you need to select the interface language\n" +
+                                                                 "Для того, чтобы продолжить работу с ботом, необходимо выбрать язык интерфейса",
+                                                           userRepository: userRepository,
+                                                           botClient: botClient,
+                                                           replyMarkup: keyboard,
+                                                           cancellationToken: cancellationToken);
+            }
+
+            static async Task<Message> SelectInterfaceLanguage(TelegramUser user, IUserRepository userRepository, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+            {
+                var language = message.Text.Split(' ')[0];
+
+                var correctLanguage = Enum.TryParse<LanguageInterface>(language, out var languageResult);
+
+                if (!correctLanguage)
+                    return await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
+                                                                text: "You must select language from reply keyboard!\n" +
+                                                                      "Выберите язык интерфейса с всплывающей клавиатуры!",
+                                                                cancellationToken: cancellationToken);
+
+                user.LanguageInterface = languageResult;
+
+                return await MessageByActionWithTableUsers(operation: TableOperation.update,
+                                                           user: user,
+                                                           text: "Great! Now specify your age (in the range of 14-100)\n" +
+                                                                 "Отлично! Теперь укажите ваш возраст (в диапазоне 14-100)",
                                                            userRepository: userRepository,
                                                            botClient: botClient,
                                                            cancellationToken: cancellationToken);
             }
 
-            static async Task<Message> Regestration(TelegramUser user, IUserRepository userRepository, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+            static async Task<Message> EnteredAge(TelegramUser user, IUserRepository userRepository, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
             {
                 var isAge = int.TryParse(message.Text, out int age);
 
-                if (!isAge || age > 100 || age < 18)
-                    return await botClient.SendTextMessageAsync(chatId: message.Chat.Id, 
-                                                                text: "You entered an incorrect age\n\n" +
-                                                                      "You must enter the age from 18 to 100",
+                if (!isAge || age > 100 || age < 14)
+                    return await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
+                                                                text: "You entered an incorrect age\n " +
+                                                                      "You must enter the age from 14 to 100\n\n" +
+                                                                      "Введите корректный возраст\n " +
+                                                                      "Вы должны указать возраст в диапазоне от 14 до 100",
                                                                 cancellationToken: cancellationToken);
 
                 user.RegestrationDate = DateTime.UtcNow;
                 user.IsReg = true;
                 user.Age = age;
 
+                return await CompleteRegestration(user, userRepository, botClient, message, cancellationToken);
+            }
+
+            static async Task<Message> CompleteRegestration(TelegramUser user, IUserRepository userRepository, ITelegramBotClient botClient, Message message, CancellationToken cancellationToken)
+            {
                 var keyboard = TelegramKeyboards.GetReplyKeyboardMarkup(ReplyKeyboards.Menu);
 
                 return await MessageByActionWithTableUsers(operation: TableOperation.update,
