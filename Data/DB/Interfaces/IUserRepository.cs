@@ -4,7 +4,7 @@ namespace TelegramBot_OpenAI.Data.DB.Interfaces
 {
     public interface IUserRepository
     {
-        Task<TelegramUser?> GetById(long id, bool asTracking);
+        Task<TelegramUser?> GetById(long id, bool asNoTracking);
         Task<bool> Add(TelegramUser user);
         Task<bool> Update(TelegramUser user);
         Task<bool> Save();

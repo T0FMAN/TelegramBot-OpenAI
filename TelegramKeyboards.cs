@@ -43,7 +43,7 @@ namespace TelegramBot_OpenAI
             new(
                 new[]
                 {
-                    new KeyboardButton[] { "English 🇬🇧🇺🇸", "Russian 🇷🇺" },
+                    new KeyboardButton[] { "English 🇬🇧🇺🇸", "Русский 🇷🇺" },
                 })
             {
                 ResizeKeyboard = true

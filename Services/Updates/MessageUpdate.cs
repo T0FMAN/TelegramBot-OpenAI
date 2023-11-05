@@ -6,6 +6,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBot_OpenAI.Data.DB.Interfaces;
 using TelegramBot_OpenAI.Data.DB.Repository;
 using TelegramBot_OpenAI.Data.Enums;
+using TelegramBot_OpenAI.Helpers;
 using TelegramBot_OpenAI.Models;
 using static TelegramBot_OpenAI.Helpers.TelegramMessagesHelper;
 
@@ -77,7 +78,7 @@ namespace TelegramBot_OpenAI.Services.Updates
             {
                 var language = message.Text.Split(' ')[0];
 
-                var correctLanguage = Enum.TryParse<LanguageInterface>(language, out var languageResult);
+                var correctLanguage = EnumsHelper.SearchValueAtLanguageInterfaceDictionary(language, out var languageResult);
 
                 if (!correctLanguage)
                     return await botClient.SendTextMessageAsync(chatId: message.Chat.Id,
