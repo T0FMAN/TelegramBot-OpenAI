@@ -5,6 +5,6 @@ namespace TelegramBot_OpenAI.Models
     public class GeneratedImage : DefaultOptionsByGenerated
     {
         [Key]
-        public int IdImage { get; set; }
+        public int ImageId { get; set; }
     }
 }

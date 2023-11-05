@@ -7,7 +7,7 @@ namespace TelegramBot_OpenAI.Models
     public class TelegramUser
     {
         [Key]
-        public int IdUser { get; init; }
+        public int UserId { get; init; }
         public long TelegramId { get; init; }
         public string? UserName { get; set; }
         public string? Bio { get; set; }
