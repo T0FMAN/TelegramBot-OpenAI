@@ -1,20 +1,23 @@
-﻿using TelegramBot_OpenAI.Configurations;
+﻿using System.Configuration;
+using TelegramBot_OpenAI.Configurations;
 
 namespace TelegramBot_OpenAI.Extensions
 {
     public static class WebAppConfigurationExtensions
     {
         /// <summary>
-        /// Shorthand for GetSection(OpenAiToken)[value].
+        /// Shorthand for GetSection(OpenAIToken)[value].
         /// </summary>
         /// <param name="configuration"></param>
         /// <returns>The Open AI token.</returns>
-        /// <exception cref="Exception"></exception>
-        public static string GetOpenAiToken(this ConfigurationManager configuration)
+        /// <exception cref="ConfigurationErrorsException"></exception>
+        public static string GetOpenAIToken(this IConfiguration configuration)
         {
-            var openAiToken = configuration.GetSection(SecretsConfiguration.OpenAiConfiguration).Value;
+            var openAIConfiguration = configuration.GetSection(SecretsConfiguration.OpenAiConfiguration)
+                                                   .Get<OpenAiConfiguration>()
+                                                   ?? throw new ConfigurationErrorsException("Ope");
 
-            return openAiToken ?? throw new Exception("Open AI token is empty..");
+            return openAIConfiguration.MyToken;
         }
     }
 }
