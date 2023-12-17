@@ -6,9 +6,16 @@ namespace TelegramBot_OpenAI.Helpers
     {
         public static bool SearchValueAtLanguageInterfaceDictionary(string value, out LanguageInterface result)
         {
+            var languageInterfaceDictionary = new Dictionary<LanguageInterface, string>()
+            {
+                    { LanguageInterface.ES, "Spanish" },
+                    { LanguageInterface.EN, "English" },
+                    { LanguageInterface.RU, "Русский" }
+            };
+
             result = default;
 
-            foreach (var pair in LanguageInterfaceDictionary)
+            foreach (var pair in languageInterfaceDictionary)
             {
                 if (pair.Value == value)
                 {
@@ -19,12 +26,5 @@ namespace TelegramBot_OpenAI.Helpers
 
             return false;
         }
-
-        static Dictionary<LanguageInterface, string> LanguageInterfaceDictionary = new()
-        {
-                { LanguageInterface.ES, "Spanish" },
-                { LanguageInterface.EN, "English" },
-                { LanguageInterface.RU, "Русский" }
-        };
     }
 }
