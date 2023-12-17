@@ -6,18 +6,18 @@ namespace TelegramBot_OpenAI.Data.DB.Repository
 {
     public class UserRepository : IUserRepository
     {
-        private readonly AppDbContext _context;
+        private readonly TelegramBotOpenAI_DbContext _context;
 
-        public UserRepository(AppDbContext context)
+        public UserRepository(TelegramBotOpenAI_DbContext context)
         {
             _context = context;
         }
 
-        public async Task<TelegramUser?> GetById(long id, bool tracking)
+        public async Task<TelegramUser?> GetById(long id, bool track = true)
         {
             TelegramUser? user;
 
-            if (tracking)
+            if (track)
                 user = await _context.Users.FirstOrDefaultAsync(x => x.TelegramId == id);
             else user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(x => x.TelegramId == id);
 
