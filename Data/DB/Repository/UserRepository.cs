@@ -6,9 +6,9 @@ namespace TelegramBot_OpenAI.Data.DB.Repository
 {
     public class UserRepository : IUserRepository
     {
-        private readonly TelegramBotOpenAI_DbContext _context;
+        private readonly TelegramBot_DbContext _context;
 
-        public UserRepository(TelegramBotOpenAI_DbContext context)
+        public UserRepository(TelegramBot_DbContext context)
         {
             _context = context;
         }

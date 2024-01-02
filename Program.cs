@@ -10,14 +10,14 @@ using TelegramBot_OpenAI.Services.Updates;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<TelegramBotOpenAI_DbContext>(options =>
+builder.Services.AddDbContext<TelegramBot_DbContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("SqlServer");
 
     options.UseSqlServer(connectionString);
 });
 
-builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
 
 var botConfigurationSection = builder.Configuration.GetSection(BotConfiguration.Configuration);
 var botConfiguration = botConfigurationSection.Get<BotConfiguration>()!;
