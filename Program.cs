@@ -2,29 +2,22 @@ using Microsoft.EntityFrameworkCore;
 using Telegram.Bot;
 using TelegramBot_OpenAI.Configurations;
 using TelegramBot_OpenAI.Controllers;
-using TelegramBot_OpenAI.Data.DB;
-using TelegramBot_OpenAI.Data.DB.Interfaces;
-using TelegramBot_OpenAI.Data.DB.Repository;
+using TelegramBot_OpenAI.Extensions;
 using TelegramBot_OpenAI.Services;
 using TelegramBot_OpenAI.Services.Updates;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<TelegramBot_DbContext>(options =>
-{
-    var connectionString = builder.Configuration.GetConnectionString("SqlServer");
+builder.Services.ConfigureDbContext(
+    connectionString: builder.Configuration.GetConnectionString("Main")!);
 
-    options.UseSqlServer(connectionString);
-});
+builder.Services.Configure<BotConfiguration>(
+    config: builder.Configuration.GetSection(BotConfiguration.Configuration));
 
-builder.Services.AddScoped<IRepositoryWrapper, RepositoryWrapper>();
+var botConfiguration = builder.Configuration.GetBotConfiguration();
 
-var botConfigurationSection = builder.Configuration.GetSection(BotConfiguration.Configuration);
-var botConfiguration = botConfigurationSection.Get<BotConfiguration>()!;
-builder.Services.Configure<BotConfiguration>(botConfigurationSection);
-
-builder.Services.AddHttpClient("telegram_bot_client")
-                .AddTypedClient<ITelegramBotClient>((httpClient, sp) =>
+builder.Services.AddHttpClient(botConfiguration.HttpClientName)
+    .AddTypedClient<ITelegramBotClient>((httpClient, sp) =>
                 {
                     var botConfig = sp.GetConfiguration<BotConfiguration>();
                     var options = new TelegramBotClientOptions(botConfig.BotToken);
@@ -33,13 +26,13 @@ builder.Services.AddHttpClient("telegram_bot_client")
                 });
 
 builder.Services.AddScoped<UpdateHandlers>();
-
 builder.Services.AddHostedService<ConfigureWebhook>();
-
 builder.Services.AddControllers()
-                .AddNewtonsoftJson();
+    .AddNewtonsoftJson();
 
 var app = builder.Build();
+
 app.MapBotWebhookRoute<BotController>(route: botConfiguration.Route);
 app.MapControllers();
+
 await app.RunAsync();
