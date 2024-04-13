@@ -1,7 +1,7 @@
 ﻿using Telegram.Bot.Types.ReplyMarkups;
 using TelegramBot_OpenAI.Data.Enums;
 
-namespace TelegramBot_OpenAI
+namespace TelegramBot_OpenAI.Data
 {
     public static class TelegramKeyboards
     {
